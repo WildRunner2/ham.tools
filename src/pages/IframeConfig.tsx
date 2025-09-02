@@ -107,22 +107,22 @@ const IframeConfig: React.FC = () => {
     params.append('titles', config.showTitles.toString());
     params.append('controls', config.showControls.toString());
 
-    const iframeUrl = ${API_CONFIG.IFRAME_BASE_URL}?;
+    const iframeUrl = `${API_CONFIG.IFRAME_BASE_URL}?${params.toString()}`;
 
-    return <iframe
-  src=""
-  width=""
-  height=""
+    return `<iframe
+  src="${iframeUrl}"
+  width="${config.width}"
+  height="${config.height}"
   frameborder="0"
   scrolling="no"
-  style="border-radius: px; background: ;">
-</iframe>;
+  style="border-radius: ${config.borderRadius}px; background: ${config.backgroundColor};">
+</iframe>`;
   };
 
   const saveConfiguration = () => {
     const newConfig = {
       id: Date.now().toString(),
-      name: Config ,
+      name: `Config ${savedConfigs.length + 1}`,
       photos: selectedPhotos,
       settings: config,
       createdAt: new Date().toISOString()
@@ -161,7 +161,7 @@ const IframeConfig: React.FC = () => {
         <div className="container">
           <div className="login-required">
             <div className="login-card">
-              <h1> Login Required</h1>
+              <h1>🔒 Login Required</h1>
               <p>
                 You need to be logged in to access the iframe configuration tool.
                 This feature allows you to create custom photo galleries for your QRZ.com profile.   
@@ -169,11 +169,11 @@ const IframeConfig: React.FC = () => {
               <div className="features-list">
                 <h3>What you can do with iframe configuration:</h3>
                 <ul>
-                  <li> Select multiple photos for your gallery</li>
-                  <li> Customize slideshow settings</li>
-                  <li> Set custom dimensions and styling</li>
-                  <li> Save multiple configurations</li>
-                  <li> Generate QRZ.com-ready iframe code</li>
+                  <li>✓ Select multiple photos for your gallery</li>
+                  <li>✓ Customize slideshow settings</li>
+                  <li>✓ Set custom dimensions and styling</li>
+                  <li>✓ Save multiple configurations</li>
+                  <li>✓ Generate QRZ.com-ready iframe code</li>
                 </ul>
               </div>
               <div className="login-actions">
@@ -308,13 +308,13 @@ const IframeConfig: React.FC = () => {
                 {photos.map(photo => (
                   <div
                     key={photo.id}
-                    className={photo-card }  
+                    className={`photo-card ${selectedPhotos.includes(photo.id) ? 'selected' : ''}`}
                     onClick={() => togglePhotoSelection(photo.id)}
                   >
                     <img src={photo.url} alt={photo.title} />
                     <div className="photo-overlay">
                       <span className="selection-indicator">
-                        {selectedPhotos.includes(photo.id) ? '' : '+'}
+                        {selectedPhotos.includes(photo.id) ? '✓' : '+'}
                       </span>
                     </div>
                     <div className="photo-info">
@@ -359,7 +359,7 @@ const IframeConfig: React.FC = () => {
                       params.append('titles', config.showTitles.toString());
                       params.append('controls', config.showControls.toString());
                       
-                      const previewUrl = ${API_CONFIG.IFRAME_BASE_URL}?;
+                      const previewUrl = `${API_CONFIG.IFRAME_BASE_URL}?${params.toString()}`;
                       window.open(previewUrl, '_blank');
                     }}
                   >

@@ -16,7 +16,7 @@ export const API_CONFIG = {
 
 // Helper function for making API calls
 export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-  const url = ${API_CONFIG.BASE_URL};
+  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
   
   const defaultOptions: RequestInit = {
     headers: {
@@ -30,7 +30,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   if (token) {
     defaultOptions.headers = {
       ...defaultOptions.headers,
-      Authorization: Bearer ,
+      Authorization: `Bearer ${token}`,
     };
   }
 

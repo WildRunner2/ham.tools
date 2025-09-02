@@ -216,11 +216,11 @@ const Register: React.FC = () => {
           <div className="benefits-section">
             <h3>Join our community and get:</h3>
             <ul>
-              <li> Custom iframe gallery configurations</li>
-              <li> Photo upload and management</li>
-              <li> QRZ.com integration tools</li>
-              <li> Advanced gallery features</li>
-              <li> Community access and support</li>
+              <li>✓ Custom iframe gallery configurations</li>
+              <li>✓ Photo upload and management</li>
+              <li>✓ QRZ.com integration tools</li>
+              <li>✓ Advanced gallery features</li>
+              <li>✓ Community access and support</li>
             </ul>
           </div>
         </div>

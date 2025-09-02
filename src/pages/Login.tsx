@@ -136,10 +136,10 @@ const Login: React.FC = () => {
           <div className="features-preview">
             <h3>With an account you can:</h3>
             <ul>
-              <li> Configure custom iframe layouts</li>
-              <li> Save your favorite photo selections</li>
-              <li> Upload your own ham radio photos</li>
-              <li> Access advanced gallery features</li>
+              <li>✓ Configure custom iframe layouts</li>
+              <li>✓ Save your favorite photo selections</li>
+              <li>✓ Upload your own ham radio photos</li>
+              <li>✓ Access advanced gallery features</li>
             </ul>
           </div>
         </div>
