@@ -71,10 +71,16 @@ const IframeConfig: React.FC = () => {
     if (selectedPhotos.length === 0) return '';
 
     const baseUrl = 'https://your-domain.vercel.app';
-    const params = new URLSearchParams({
-      photos: selectedPhotos.join(','),
-      ...config
-    });
+    const params = new URLSearchParams();
+    params.append('photos', selectedPhotos.join(','));
+    params.append('width', config.width.toString());
+    params.append('height', config.height.toString());
+    params.append('autoPlay', config.autoPlay.toString());
+    params.append('interval', config.interval.toString());
+    params.append('showTitles', config.showTitles.toString());
+    params.append('showControls', config.showControls.toString());
+    params.append('borderRadius', config.borderRadius.toString());
+    params.append('backgroundColor', config.backgroundColor);
 
     return `<iframe 
   src="${baseUrl}/iframe-viewer?${params.toString()}"
