@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoggedIn, logout } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
   const isActivePath = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+    setIsMenuOpen(false);
+    navigate('/');
   };
 
   return (
@@ -47,13 +62,68 @@ const Header: React.FC = () => {
             >
               Useful Links
             </Link>
-            <Link 
-              to="/login" 
-              className={`nav-link login-link ${isActivePath('/login') ? 'active' : ''}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </Link>
+            
+            {/* Authentication-aware navigation */}
+            {!isLoggedIn ? (
+              <>
+                <Link 
+                  to="/login" 
+                  className={`nav-link login-link ${isActivePath('/login') ? 'active' : ''}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/register" 
+                  className={`nav-link register-link ${isActivePath('/register') ? 'active' : ''}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Register
+                </Link>
+              </>
+            ) : (
+              <div className="user-menu-container">
+                <button 
+                  className="user-menu-trigger"
+                  onClick={toggleUserMenu}
+                  aria-label="User menu"
+                >
+                  <span className="user-callsign">{user?.callsign}</span>
+                  <span className="dropdown-arrow">▼</span>
+                </button>
+                
+                {isUserMenuOpen && (
+                  <div className="user-dropdown">
+                    <Link 
+                      to="/profile" 
+                      className="dropdown-link"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Profile
+                    </Link>
+                    <Link 
+                      to="/iframe-config" 
+                      className="dropdown-link"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      QRZ Config
+                    </Link>
+                    <button 
+                      className="dropdown-link logout-btn"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
 
           <button 

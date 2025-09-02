@@ -334,6 +334,10 @@ const IframeConfig: React.FC = () => {
             {selectedPhotos.length > 0 && (
               <div className="iframe-preview">
                 <h3>Generated Iframe Code</h3>
+                <p className="preview-note">
+                  <strong>Note:</strong> The preview URL uses placeholder domains. 
+                  Update the API configuration when your backend is deployed.
+                </p>
                 <textarea
                   value={generateIframeCode()}
                   readOnly

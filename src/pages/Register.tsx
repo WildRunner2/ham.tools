@@ -1,10 +1,12 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { apiCall, API_CONFIG } from '../config/api';
 import './Register.css';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { login, isLoggedIn } = useAuth();
   const [formData, setFormData] = useState({
     callsign: '',
     email: '',
@@ -16,6 +18,13 @@ const Register: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/profile');
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -57,12 +66,11 @@ const Register: React.FC = () => {
       });
 
       if (response.success) {
-        // Store authentication token
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        // Use AuthContext login method
+        await login(response.data.user, response.data.token);
         
-        // Redirect to gallery or dashboard
-        navigate('/gallery');
+        // Redirect to profile page
+        navigate('/profile');
       } else {
         setError(response.message || 'Registration failed');
       }

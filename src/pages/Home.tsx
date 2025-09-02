@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -15,12 +16,12 @@ const Home: React.FC = () => {
               Amateur Radio resources, photo gallery, and QRZ.com integration tools
             </p>
             <div className="hero-actions">
-              <a href="/gallery" className="btn btn-primary">
+              <Link to="/gallery" className="btn btn-secondary">
                 View Gallery
-              </a>
-              <a href="/useful-links" className="btn btn-secondary">
+              </Link>
+              <Link to="/useful-links" className="btn btn-secondary">
                 Useful Links
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -100,12 +101,12 @@ const Home: React.FC = () => {
               Explore the gallery or create an account to configure your custom iframe.
             </p>
             <div className="cta-actions">
-              <a href="/gallery" className="btn btn-primary">
+              <Link to="/gallery" className="btn btn-secondary">
                 Browse Gallery
-              </a>
-              <a href="/login" className="btn btn-outline">
+              </Link>
+              <Link to="/login" className="btn btn-outline">
                 Sign In
-              </a>
+              </Link>
             </div>
           </div>
         </section>

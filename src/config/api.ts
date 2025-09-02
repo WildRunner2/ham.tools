@@ -1,6 +1,13 @@
 ﻿// API Configuration for SP3FCK Ham Tools
+import { getCurrentConfig } from './environment';
+
+// Get current environment URLs
+const config = getCurrentConfig();
+
 export const API_CONFIG = {
-  BASE_URL: 'https://sp3fck-ham-tools-api.hamtools.workers.dev/api',
+  // Main API base URL
+  BASE_URL: `${config.BACKEND_URL}/api`,
+    
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
@@ -11,7 +18,9 @@ export const API_CONFIG = {
       VIEWER: '/iframe/viewer'
     }
   },
-  IFRAME_BASE_URL: 'https://sp3fck-ham-tools-api.hamtools.workers.dev/api/iframe/viewer'
+  
+  // Iframe viewer URL - this will be embedded in QRZ.com pages
+  IFRAME_BASE_URL: `${config.IFRAME_DOMAIN}/iframe/viewer`
 };
 
 // Helper function for making API calls
