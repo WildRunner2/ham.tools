@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import { apiCall, API_CONFIG } from '../config/api';
 import './IframeConfig.css';
 
 interface Photo {
-  id: string;
+  id: number;
   url: string;
   title: string;
   description?: string;
 }
 
+interface User {
+  id: number;
+  callsign: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
 const IframeConfig: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
   const [config, setConfig] = useState({
     width: 600,
     height: 400,
@@ -23,44 +33,62 @@ const IframeConfig: React.FC = () => {
     backgroundColor: '#1e1e1e'
   });
   const [savedConfigs, setSavedConfigs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in (this would be actual auth check)
+  // Check if user is logged in
   useEffect(() => {
-    // TODO: Implement actual auth check
-    setIsLoggedIn(false); // For demo purposes
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setIsLoggedIn(true);
+      setUser(JSON.parse(userData));
+      loadPhotos();
+    }
+    
+    setLoading(false);
   }, []);
 
-  // Mock photos data
-  useEffect(() => {
-    const mockPhotos: Photo[] = [
-      {
-        id: '1',
-        url: 'https://via.placeholder.com/300x200/333/fff?text=Station',
-        title: 'My Ham Radio Station',
-        description: 'Main operating position'
-      },
-      {
-        id: '2',
-        url: 'https://via.placeholder.com/300x200/333/fff?text=Antenna',
-        title: 'Antenna Farm',
-        description: 'VHF/UHF antennas'
-      },
-      {
-        id: '3',
-        url: 'https://via.placeholder.com/300x200/333/fff?text=QSL',
-        title: 'QSL Cards',
-        description: 'Collection highlights'
+  // Load photos from API
+  const loadPhotos = async () => {
+    try {
+      const response = await apiCall(API_CONFIG.ENDPOINTS.PHOTOS);
+      if (response.success) {
+        setPhotos(response.data.photos || []);
       }
-    ];
-    setPhotos(mockPhotos);
-  }, []);
+    } catch (error) {
+      console.error('Failed to load photos:', error);
+      // Use mock photos as fallback
+      const mockPhotos: Photo[] = [
+        {
+          id: 1,
+          url: 'https://via.placeholder.com/300x200/333/fff?text=Station',
+          title: 'My Ham Radio Station',
+          description: 'Main operating position'
+        },
+        {
+          id: 2,
+          url: 'https://via.placeholder.com/300x200/333/fff?text=Antenna',
+          title: 'Antenna Farm',
+          description: 'VHF/UHF antennas'
+        },
+        {
+          id: 3,
+          url: 'https://via.placeholder.com/300x200/333/fff?text=QSL',
+          title: 'QSL Cards',
+          description: 'Collection highlights'
+        }
+      ];
+      setPhotos(mockPhotos);
+    }
+  };
 
   const handleConfigChange = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
-  const togglePhotoSelection = (photoId: string) => {
-    setSelectedPhotos(prev => 
+  const togglePhotoSelection = (photoId: number) => {
+    setSelectedPhotos(prev =>
       prev.includes(photoId)
         ? prev.filter(id => id !== photoId)
         : [...prev, photoId]
@@ -70,39 +98,62 @@ const IframeConfig: React.FC = () => {
   const generateIframeCode = () => {
     if (selectedPhotos.length === 0) return '';
 
-    const baseUrl = 'https://your-domain.vercel.app';
     const params = new URLSearchParams();
     params.append('photos', selectedPhotos.join(','));
     params.append('width', config.width.toString());
     params.append('height', config.height.toString());
-    params.append('autoPlay', config.autoPlay.toString());
+    params.append('autoplay', config.autoPlay.toString());
     params.append('interval', config.interval.toString());
-    params.append('showTitles', config.showTitles.toString());
-    params.append('showControls', config.showControls.toString());
-    params.append('borderRadius', config.borderRadius.toString());
-    params.append('backgroundColor', config.backgroundColor);
+    params.append('titles', config.showTitles.toString());
+    params.append('controls', config.showControls.toString());
 
-    return `<iframe 
-  src="${baseUrl}/iframe-viewer?${params.toString()}"
-  width="${config.width}"
-  height="${config.height}"
+    const iframeUrl = ${API_CONFIG.IFRAME_BASE_URL}?;
+
+    return <iframe
+  src=""
+  width=""
+  height=""
   frameborder="0"
   scrolling="no"
-  style="border-radius: ${config.borderRadius}px;">
-</iframe>`;
+  style="border-radius: px; background: ;">
+</iframe>;
   };
 
   const saveConfiguration = () => {
     const newConfig = {
       id: Date.now().toString(),
-      name: `Config ${savedConfigs.length + 1}`,
+      name: Config ,
       photos: selectedPhotos,
       settings: config,
       createdAt: new Date().toISOString()
     };
     setSavedConfigs(prev => [...prev, newConfig]);
-    alert('Configuration saved!');
+    alert('Configuration saved locally! (Server save coming soon)');
   };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(generateIframeCode());
+      alert('Iframe code copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Fallback: select the text
+      const textarea = document.querySelector('.code-textarea') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.select();
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="iframe-config">
+        <div className="container">
+          <div className="loading">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
@@ -110,19 +161,19 @@ const IframeConfig: React.FC = () => {
         <div className="container">
           <div className="login-required">
             <div className="login-card">
-              <h1>🔒 Login Required</h1>
+              <h1> Login Required</h1>
               <p>
                 You need to be logged in to access the iframe configuration tool.
-                This feature allows you to create custom photo galleries for your QRZ.com profile.
+                This feature allows you to create custom photo galleries for your QRZ.com profile.   
               </p>
               <div className="features-list">
                 <h3>What you can do with iframe configuration:</h3>
                 <ul>
-                  <li>✓ Select multiple photos for your gallery</li>
-                  <li>✓ Customize slideshow settings</li>
-                  <li>✓ Set custom dimensions and styling</li>
-                  <li>✓ Save multiple configurations</li>
-                  <li>✓ Generate QRZ.com-ready iframe code</li>
+                  <li> Select multiple photos for your gallery</li>
+                  <li> Customize slideshow settings</li>
+                  <li> Set custom dimensions and styling</li>
+                  <li> Save multiple configurations</li>
+                  <li> Generate QRZ.com-ready iframe code</li>
                 </ul>
               </div>
               <div className="login-actions">
@@ -146,13 +197,18 @@ const IframeConfig: React.FC = () => {
         <div className="config-header">
           <h1>Iframe Configuration</h1>
           <p>Create custom photo galleries for your QRZ.com profile</p>
+          {user && (
+            <div className="user-info">
+              Welcome back, {user.firstName} ({user.callsign})!
+            </div>
+          )}
         </div>
 
         <div className="config-layout">
           <div className="config-sidebar">
             <div className="config-section">
               <h3>Display Settings</h3>
-              
+
               <div className="form-group">
                 <label>Width (px)</label>
                 <input
@@ -192,7 +248,7 @@ const IframeConfig: React.FC = () => {
                   <input
                     type="number"
                     value={config.interval}
-                    onChange={(e) => handleConfigChange('interval', parseInt(e.target.value))}
+                    onChange={(e) => handleConfigChange('interval', parseInt(e.target.value))}       
                     min="1000"
                     max="10000"
                     step="500"
@@ -227,7 +283,7 @@ const IframeConfig: React.FC = () => {
                 <input
                   type="number"
                   value={config.borderRadius}
-                  onChange={(e) => handleConfigChange('borderRadius', parseInt(e.target.value))}
+                  onChange={(e) => handleConfigChange('borderRadius', parseInt(e.target.value))}     
                   min="0"
                   max="20"
                 />
@@ -235,7 +291,7 @@ const IframeConfig: React.FC = () => {
             </div>
 
             <div className="config-actions">
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={saveConfiguration}
                 disabled={selectedPhotos.length === 0}
@@ -250,15 +306,15 @@ const IframeConfig: React.FC = () => {
               <h3>Select Photos ({selectedPhotos.length} selected)</h3>
               <div className="photos-grid">
                 {photos.map(photo => (
-                  <div 
+                  <div
                     key={photo.id}
-                    className={`photo-card ${selectedPhotos.includes(photo.id) ? 'selected' : ''}`}
+                    className={photo-card }  
                     onClick={() => togglePhotoSelection(photo.id)}
                   >
                     <img src={photo.url} alt={photo.title} />
                     <div className="photo-overlay">
                       <span className="selection-indicator">
-                        {selectedPhotos.includes(photo.id) ? '✓' : '+'}
+                        {selectedPhotos.includes(photo.id) ? '' : '+'}
                       </span>
                     </div>
                     <div className="photo-info">
@@ -267,6 +323,12 @@ const IframeConfig: React.FC = () => {
                   </div>
                 ))}
               </div>
+              
+              {photos.length === 0 && (
+                <div className="no-photos">
+                  <p>No photos available. Upload some photos to get started!</p>
+                </div>
+              )}
             </div>
 
             {selectedPhotos.length > 0 && (
@@ -281,11 +343,26 @@ const IframeConfig: React.FC = () => {
                 <div className="preview-actions">
                   <button
                     className="btn btn-secondary"
-                    onClick={() => navigator.clipboard.writeText(generateIframeCode())}
+                    onClick={copyToClipboard}
                   >
                     Copy Code
                   </button>
-                  <button className="btn btn-outline">
+                  <button 
+                    className="btn btn-outline"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.append('photos', selectedPhotos.join(','));
+                      params.append('width', config.width.toString());
+                      params.append('height', config.height.toString());
+                      params.append('autoplay', config.autoPlay.toString());
+                      params.append('interval', config.interval.toString());
+                      params.append('titles', config.showTitles.toString());
+                      params.append('controls', config.showControls.toString());
+                      
+                      const previewUrl = ${API_CONFIG.IFRAME_BASE_URL}?;
+                      window.open(previewUrl, '_blank');
+                    }}
+                  >
                     Preview
                   </button>
                 </div>

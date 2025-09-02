@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+﻿import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiCall, API_CONFIG } from '../config/api';
 import './Register.css';
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     callsign: '',
     email: '',
@@ -10,10 +12,10 @@ const Register: React.FC = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    agreeToTerms: false
+    agreedToTerms: false
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -21,77 +23,52 @@ const Register: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-
-    if (!formData.callsign.trim()) {
-      newErrors.callsign = 'Callsign is required';
-    } else if (!/^[A-Z0-9\/]+$/i.test(formData.callsign)) {
-      newErrors.callsign = 'Please enter a valid callsign';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the terms of service';
-    }
-
-    return newErrors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    setLoading(true);
+    setError('');
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setErrors({});
+    // Validate terms agreement
+    if (!formData.agreedToTerms) {
+      setError('You must agree to the terms and conditions');
+      setLoading(false);
+      return;
+    }
 
     try {
-      // TODO: Implement actual registration with Vercel backend
-      console.log('Registration attempt:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For now, just show success message
-      alert('Registration functionality will be implemented with Vercel backend');
-      
-    } catch (err) {
-      setErrors({ general: 'Registration failed. Please try again.' });
+      const response = await apiCall(API_CONFIG.ENDPOINTS.AUTH.REGISTER, {
+        method: 'POST',
+        body: JSON.stringify({
+          callsign: formData.callsign,
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        })
+      });
+
+      if (response.success) {
+        // Store authentication token
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Redirect to gallery or dashboard
+        navigate('/gallery');
+      } else {
+        setError(response.message || 'Registration failed');
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -107,9 +84,9 @@ const Register: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="register-form">
-            {errors.general && (
+            {error && (
               <div className="error-message">
-                {errors.general}
+                {error}
               </div>
             )}
 
@@ -122,10 +99,9 @@ const Register: React.FC = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={errors.firstName ? 'error' : ''}
+                  required
                   placeholder="Your first name"
                 />
-                {errors.firstName && <span className="field-error">{errors.firstName}</span>}
               </div>
 
               <div className="form-group">
@@ -136,10 +112,9 @@ const Register: React.FC = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={errors.lastName ? 'error' : ''}
+                  required
                   placeholder="Your last name"
                 />
-                {errors.lastName && <span className="field-error">{errors.lastName}</span>}
               </div>
             </div>
 
@@ -149,13 +124,12 @@ const Register: React.FC = () => {
                 type="text"
                 id="callsign"
                 name="callsign"
-                value={formData.callsign.toUpperCase()}
+                value={formData.callsign}
                 onChange={handleChange}
-                className={errors.callsign ? 'error' : ''}
-                placeholder="e.g., SP3FCK"
+                required
+                placeholder="SP3FCK"
                 style={{ textTransform: 'uppercase' }}
               />
-              {errors.callsign && <span className="field-error">{errors.callsign}</span>}
             </div>
 
             <div className="form-group">
@@ -166,10 +140,9 @@ const Register: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={errors.email ? 'error' : ''}
-                placeholder="your.callsign@example.com"
+                required
+                placeholder="your.email@example.com"
               />
-              {errors.email && <span className="field-error">{errors.email}</span>}
             </div>
 
             <div className="form-row">
@@ -181,10 +154,10 @@ const Register: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={errors.password ? 'error' : ''}
-                  placeholder="Minimum 8 characters"
+                  required
+                  placeholder="At least 6 characters"
+                  minLength={6}
                 />
-                {errors.password && <span className="field-error">{errors.password}</span>}
               </div>
 
               <div className="form-group">
@@ -195,10 +168,9 @@ const Register: React.FC = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={errors.confirmPassword ? 'error' : ''}
-                  placeholder="Re-enter password"
+                  required
+                  placeholder="Repeat your password"
                 />
-                {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
               </div>
             </div>
 
@@ -206,18 +178,25 @@ const Register: React.FC = () => {
               <label className="checkbox-label">
                 <input
                   type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
+                  name="agreedToTerms"
+                  checked={formData.agreedToTerms}
                   onChange={handleChange}
+                  required
                 />
                 <span className="checkmark"></span>
-                I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+                I agree to the{' '}
+                <Link to="/terms" className="terms-link">
+                  Terms and Conditions
+                </Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="privacy-link">
+                  Privacy Policy
+                </Link>
               </label>
-              {errors.agreeToTerms && <span className="field-error">{errors.agreeToTerms}</span>}
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary btn-full"
               disabled={loading}
             >
@@ -232,6 +211,17 @@ const Register: React.FC = () => {
                 Sign in here
               </Link>
             </p>
+          </div>
+
+          <div className="benefits-section">
+            <h3>Join our community and get:</h3>
+            <ul>
+              <li> Custom iframe gallery configurations</li>
+              <li> Photo upload and management</li>
+              <li> QRZ.com integration tools</li>
+              <li> Advanced gallery features</li>
+              <li> Community access and support</li>
+            </ul>
           </div>
         </div>
       </div>

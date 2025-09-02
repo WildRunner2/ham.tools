@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+﻿import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiCall, API_CONFIG } from '../config/api';
 import './Login.css';
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
+    callsign: '',
     password: '',
     rememberMe: false
   });
@@ -25,17 +27,27 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      // TODO: Implement actual authentication with Vercel backend
-      console.log('Login attempt:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For now, just show success message
-      alert('Login functionality will be implemented with Vercel backend');
-      
-    } catch (err) {
-      setError('Invalid email or password');
+      const response = await apiCall(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
+        method: 'POST',
+        body: JSON.stringify({
+          callsign: formData.callsign,
+          password: formData.password
+        })
+      });
+
+      if (response.success) {
+        // Store authentication token
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Redirect to gallery or dashboard
+        navigate('/gallery');
+      } else {
+        setError(response.message || 'Login failed');
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Invalid callsign or password');
     } finally {
       setLoading(false);
     }
@@ -58,15 +70,16 @@ const Login: React.FC = () => {
             )}
 
             <div className="form-group">
-              <label htmlFor="email">Email Address</label>
+              <label htmlFor="callsign">Amateur Radio Callsign</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                id="callsign"
+                name="callsign"
+                value={formData.callsign}
                 onChange={handleChange}
                 required
-                placeholder="your.callsign@example.com"
+                placeholder="SP3FCK"
+                style={{ textTransform: 'uppercase' }}
               />
             </div>
 
@@ -96,8 +109,8 @@ const Login: React.FC = () => {
               </label>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary btn-full"
               disabled={loading}
             >
@@ -123,10 +136,10 @@ const Login: React.FC = () => {
           <div className="features-preview">
             <h3>With an account you can:</h3>
             <ul>
-              <li>✓ Configure custom iframe layouts</li>
-              <li>✓ Save your favorite photo selections</li>
-              <li>✓ Upload your own ham radio photos</li>
-              <li>✓ Access advanced gallery features</li>
+              <li> Configure custom iframe layouts</li>
+              <li> Save your favorite photo selections</li>
+              <li> Upload your own ham radio photos</li>
+              <li> Access advanced gallery features</li>
             </ul>
           </div>
         </div>
